@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SolGuard — DBC-native risk monitor</title>
+<style>
+  :root{
+    --bg:#08080a; --panel:#0f0f12; --panel2:#141419; --line:#26262e;
+    --gold:#d4af37; --gold-hi:#f2d06b; --gold-dim:#8a7024;
+    --txt:#e8e6e1; --dim:#8b8a86; --red:#e5484d; --amber:#f0a020;
+    --green:#3fb950; --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:
+      radial-gradient(900px 500px at 15% -10%, #1a1509 0%, transparent 60%),
+      radial-gradient(700px 400px at 100% 0%, #12100c 0%, transparent 55%),
+      var(--bg);
+    color:var(--txt);font-family:var(--mono);font-size:13px;line-height:1.55;
+    min-height:100vh;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 20px 80px}
+
+  header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
+    border-bottom:1px solid var(--line);padding-bottom:16px;margin-bottom:22px}
+  .brand{font-size:20px;font-weight:700;letter-spacing:5px;
+    background:linear-gradient(92deg,var(--gold-hi),var(--gold) 45%,var(--gold-dim));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .tag{color:var(--dim);font-size:11px;letter-spacing:1.6px;text-transform:uppercase}
+  .ro{margin-left:auto;font-size:10px;letter-spacing:1.4px;color:var(--green);
+    border:1px solid #1d3a21;background:#0c1a0e;padding:4px 9px;border-radius:3px}
+
+  .card{background:linear-gradient(180deg,var(--panel2),var(--panel));
+    border:1px solid var(--line);border-radius:6px;padding:18px;margin-bottom:16px}
+  .card h2{margin:0 0 14px;font-size:11px;letter-spacing:2.2px;color:var(--gold);
+    text-transform:uppercase;font-weight:600}
+
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  input,select,button{font-family:var(--mono);font-size:12px}
+  input,select{
+    background:#0a0a0d;border:1px solid var(--line);color:var(--txt);
+    padding:10px 12px;border-radius:4px;outline:none;transition:border-color .15s
+  }
+  input:focus,select:focus{border-color:var(--gold-dim)}
+  input.grow{flex:1;min-width:280px}
+  input::placeholder{color:#4d4c49}
+
+  button{
+    background:linear-gradient(180deg,#1c1a12,#12110c);color:var(--gold-hi);
+    border:1px solid var(--gold-dim);padding:10px 20px;border-radius:4px;
+    cursor:pointer;letter-spacing:1.6px;text-transform:uppercase;font-weight:600;
+    transition:all .15s
+  }
+  button:hover:not(:disabled){background:linear-gradient(180deg,#2a2515,#1a1710);
+    border-color:var(--gold);box-shadow:0 0 14px rgba(212,175,55,.16)}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  button.ghost{background:transparent;color:var(--dim);border-color:var(--line);
+    padding:6px 12px;letter-spacing:1.2px;font-weight:500}
+  button.ghost:hover{color:var(--gold-hi);border-color:var(--gold-dim);box-shadow:none}
+
+  .hint{color:var(--dim);font-size:11px;margin-top:9px}
+  .hint b{color:var(--gold-dim);font-weight:600}
+
+  /* verdict */
+  .banner{display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+    border:1px solid var(--line);border-left-width:3px;border-radius:5px;
+    padding:16px 18px;background:#0c0c10;margin-bottom:16px}
+  .banner.safe{border-left-color:var(--green)}
+  .banner.warn{border-left-color:var(--amber)}
+  .banner.block{border-left-color:var(--red)}
+  .banner.unknown{border-left-color:var(--dim)}
+  .banner .state{font-size:17px;font-weight:700;letter-spacing:3.5px}
+  .banner.safe .state{color:var(--green)}
+  .banner.warn .state{color:var(--amber)}
+  .banner.block .state{color:var(--red)}
+  .banner.unknown .state{color:var(--dim)}
+  .banner .sum{color:var(--dim);font-size:11.5px}
+  .score{margin-left:auto;text-align:right}
+  .score .n{font-size:30px;font-weight:700;line-height:1}
+  .score .l{font-size:9px;letter-spacing:1.8px;color:var(--dim);text-transform:uppercase}
+
+  /* checks */
+  .check{display:flex;gap:12px;padding:11px 0;border-bottom:1px dashed #1c1c22}
+  .check:last-child{border-bottom:none}
+  .tag{flex:0 0 58px;text-align:center;font-size:9.5px;letter-spacing:1.3px;
+    padding:3px 0;border-radius:3px;font-weight:700;height:fit-content;margin-top:2px}
+  .t-pass{color:var(--green);background:#0c1a0e;border:1px solid #1d3a21}
+  .t-block{color:var(--red);background:#1a0c0d;border:1px solid #3a1d1f}
+  .t-warn{color:var(--amber);background:#1a1408;border:1px solid #3a2f14}
+  .t-skip{color:#666;background:#121214;border:1px solid #242428}
+  .t-unv{color:#8a8a94;background:#131316;border:1px dashed #3a3a44}
+  .check .nm{font-weight:600;margin-bottom:2px}
+  .check .dt{color:var(--dim);font-size:11.5px}
+
+  /* veto */
+  .veto{border:1px solid #3a1d1f;background:linear-gradient(180deg,#160a0b,#100809);
+    border-radius:6px;padding:18px;margin-top:16px}
+  .veto .vt{color:var(--red);font-weight:700;letter-spacing:2.6px;font-size:12px;
+    text-transform:uppercase;margin-bottom:6px}
+  .veto .vd{color:var(--dim);font-size:11.5px;margin-bottom:14px}
+  .veto .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .kbtn{border-color:#5a2a2d;color:#ff8b8f;background:linear-gradient(180deg,#241012,#180a0b)}
+  .kbtn:hover{background:#2c1416;border-color:var(--red);box-shadow:0 0 14px rgba(229,72,77,.2)}
+  .kbtn.armed{background:var(--red);color:#fff;border-color:var(--red)}
+  .vnote{color:#5e5c58;font-size:10.5px;margin-top:12px;letter-spacing:.4px}
+
+  pre{background:#0a0a0d;border:1px solid var(--line);border-radius:4px;
+    padding:12px;overflow:auto;max-height:340px;font-size:11px;color:#a9a7a2;margin:0}
+  .err{color:var(--red);font-size:11.5px;margin-top:10px}
+  .meta{color:var(--dim);font-size:10.5px;margin-top:10px;letter-spacing:.5px}
+  .spin{display:inline-block;width:9px;height:9px;border:1.5px solid var(--gold-dim);
+    border-top-color:transparent;border-radius:50%;animation:r .7s linear infinite;
+    margin-right:7px;vertical-align:-1px}
+  @keyframes r{to{transform:rotate(360deg)}}
+  .two{display:grid;grid-template-columns:1fr;gap:0}
+  @media(min-width:760px){.two{grid-template-columns:1fr 1fr;gap:16px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">SOLGUARD</div>
+    <div class="tag">DBC-native risk monitor</div>
+    <div class="ro">READ-ONLY · NO WALLET</div>
+  </header>
+
+  <!-- token scan -->
+  <div class="card">
+    <h2>Token risk — pre-trade gate</h2>
+    <div class="row">
+      <input id="mint" class="grow" placeholder="token mint address…" spellcheck="false" />
+      <select id="dex">
+        <option value="">dex (optional)</option>
+        <option>Raydium</option>
+        <option>Orca</option>
+        <option>Meteora DBC</option>
+        <option>Meteora DLMM</option>
+        <option>Meteora DAMM v2</option>
+        <option>PumpSwap</option>
+      </select>
+      <input id="pool" placeholder="pool addr (optional)" spellcheck="false" style="width:190px" />
+      <button id="scan">Scan</button>
+    </div>
+    <div class="hint">Runs the same deterministic checks the engine's gate runs. Five free-RPC checks, no vendor key.</div>
+  </div>
+
+  <!-- result -->
+  <div id="out" style="display:none">
+    <div id="banner" class="banner unknown">
+      <div>
+        <div class="state" id="state">—</div>
+        <div class="sum" id="sum"></div>
+      </div>
+      <div class="score">
+        <div class="n" id="score">—</div>
+        <div class="l">risk score</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Checks</h2>
+      <div id="checks"></div>
+    </div>
+
+    <div id="vetobox"></div>
+
+    <div class="meta" id="meta"></div>
+  </div>
+
+  <!-- DBC -->
+  <div class="card" style="margin-top:22px">
+    <h2>Meteora DBC pool — curve state</h2>
+    <div class="row">
+      <input id="dbcp" class="grow" placeholder="DBC virtual pool address…" spellcheck="false" />
+      <button id="dbcbtn">Assess curve</button>
+    </div>
+    <div class="hint">Reads live state through the Meteora SDK. If the SDK is missing this reports <b>UNVERIFIED</b> — never a fake pass.</div>
+    <div id="dbcOut" style="margin-top:16px;display:none"></div>
+  </div>
+
+  <div class="card">
+    <h2>Raw JSON</h2>
+    <pre id="raw">// scan something</pre>
+  </div>
+
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+function tagFor(c){
+  if (c.status === 'skip')       return ['SKIP','t-skip'];
+  if (c.status === 'unverified') return ['UNVERIFIED','t-unv'];
+  if (c.status === 'pass')       return ['PASS','t-pass'];
+  return c.severity === 'block' ? ['BLOCK','t-block'] : ['WARN','t-warn'];
+}
+
+function renderVerdict(v){
+  $('out').style.display = 'block';
+
+  // Four outcomes, four colours. UNVERIFIED is grey — an absence of
+  // information, not a verdict, and it must never wear the red of a block.
+  const cls = v.decision === 'BLOCK' ? 'block'
+    : v.decision === 'UNVERIFIED' ? 'unknown'
+    : v.warned.length ? 'warn' : 'safe';
+  const label = { BLOCK:'BLOCKED', UNVERIFIED:'INCONCLUSIVE', ALLOW_WITH_WARNINGS:'SAFE — WARNINGS', ALLOW:'SAFE' }[v.decision] || 'SAFE';
+  const unvN = (v.unverified || []).length;
+
+  $('banner').className = 'banner ' + cls;
+  $('state').textContent = label;
+  $('sum').textContent = unvN > 0
+    ? `${unvN} of ${v.checks.length} checks could not be read — held for review, never scored as findings.`
+    : `${v.checks.length} checks evaluated`;
+
+  if (v.riskScore === null){
+    $('score').textContent = '—';
+    $('score').style.color = 'var(--dim)';
+  } else {
+    $('score').textContent = v.riskScore;
+    $('score').style.color = v.riskScore > 70 ? 'var(--green)' : v.riskScore > 40 ? 'var(--amber)' : 'var(--red)';
+  }
+
+  $('checks').innerHTML = v.checks.map(c => {
+    const [t, cls] = tagFor(c);
+    return `<div class="check">
+      <div class="tag ${cls}">${t}</div>
+      <div><div class="nm">${esc(c.name)}</div><div class="dt">${esc(c.detail)}</div></div>
+    </div>`;
+  }).join('');
+
+  // Veto card — the human gate. Only a CONFIRMED failure earns red.
+  if (v.decision === 'BLOCK'){
+    $('vetobox').innerHTML = `
+      <div class="veto">
+        <div class="vt">⛔ Veto — execution blocked</div>
+        <div class="vd">${esc(v.blocked.map(b=>b.name).join(' · '))}</div>
+        <div class="actions">
+          <button class="kbtn" id="vetoBtn">Veto</button>
+          <button class="ghost" id="passBtn">Override — would allow</button>
+          <span id="vetoMsg" class="vnote"></span>
+        </div>
+        <div class="vnote">Demo mode is read-only. Approving here records the decision; it never signs or sends a transaction.</div>
+      </div>`;
+    $('vetoBtn').onclick = () => {
+      $('vetoBtn').classList.add('armed');
+      $('vetoBtn').textContent = 'VETOED';
+      $('vetoMsg').textContent = '✕ trade killed — SolGuard held the gate';
+    };
+    $('passBtn').onclick = () => {
+      $('vetoMsg').textContent = '⚠ override recorded — deterministic checks still say BLOCK';
+    };
+  } else if (v.decision === 'UNVERIFIED'){
+    $('vetobox').innerHTML = `
+      <div class="veto" style="border-color:#3a3a44;background:linear-gradient(180deg,#141416,#0e0e10)">
+        <div class="vt" style="color:#8a8a94">◻ Inconclusive — held for review</div>
+        <div class="vd">${esc((v.unverified||[]).map(u=>u.name).join(' · '))} could not be read. The endpoint failed; the token was not accused.</div>
+        <div class="vnote">Nothing was scored for these checks, in either direction. Re-run, or point SolGuard at a dedicated RPC.</div>
+      </div>`;
+  } else {
+    $('vetobox').innerHTML = '';
+  }
+
+  $('meta').textContent = `mint ${v.mintAddress} · ${new Date().toISOString()}`;
+}
+
+function esc(s){ return String(s ?? '').replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+
+async function scan(){
+  const mint = $('mint').value.trim();
+  if (!mint) return;
+  $('scan').disabled = true;
+  $('raw').textContent = 'scanning…';
+  try{
+    const q = new URLSearchParams({ mint, dex: $('dex').value, pool: $('pool').value.trim() });
+    const r = await fetch('/api/scan?' + q);
+    const j = await r.json();
+    if (!j.ok){ $('raw').textContent = '✕ ' + (j.error || 'scan failed'); $('out').style.display='none'; return; }
+    renderVerdict(j.verdict);
+    $('raw').textContent = JSON.stringify(j, null, 2);
+  }catch(e){
+    $('raw').textContent = '✕ ' + e.message;
+  }finally{
+    $('scan').disabled = false;
+  }
+}
+
+async function assessDbc(){
+  const pool = $('dbcp').value.trim();
+  if (!pool) return;
+  $('dbcbtn').disabled = true;
+  $('dbcOut').style.display = 'block';
+  $('dbcOut').innerHTML = '<span class="spin"></span><span style="color:var(--dim)">reading curve state…</span>';
+  try{
+    const r = await fetch('/api/dbc?pool=' + encodeURIComponent(pool));
+    const j = await r.json();
+    if (!j.ok){ $('dbcOut').innerHTML = '<div class="err">✕ '+esc(j.error)+'</div>'; return; }
+
+    const a = j.dbc;
+    const cls = !a.available ? 'unknown' : (j.blocked ? 'block' : 'safe');
+    const label = !a.available ? 'UNVERIFIED' : (j.blocked ? 'DBC BLOCKED' : 'DBC CLEAR');
+
+    const s = a.state;
+    const facts = s ? `
+      <div class="check"><div class="tag t-skip">INFO</div><div>
+        <div class="nm">Curve state</div>
+        <div class="dt">
+          base ${esc(s.baseMint ?? '—')} · quote ${esc(s.quoteMint ?? '—')}<br/>
+          reserve ${s.quoteReserve ?? '—'} / threshold ${s.migrationQuoteThreshold ?? '—'}
+          · progress ${s.migrationProgress !== null ? (s.migrationProgress*100).toFixed(1)+'%' : '—'}<br/>
+          creator fee ${s.creatorTradingFeePct ?? '—'}% · partner fee ${s.partnerTradingFeePct ?? '—'}%
+          · token-2022 ${s.isToken2022 ?? '—'} · hook ${s.hasTransferHook ?? '—'}
+        </div>
+      </div></div>` : '';
+
+    $('dbcOut').innerHTML = `
+      <div class="banner ${cls}"><div><div class="state">${label}</div>
+        <div class="sum">${esc(j.summary)}</div></div></div>
+      ${facts}
+      ${a.checks.map(c => {
+        const [t, tc] = tagFor(c);
+        return `<div class="check"><div class="tag ${tc}">${t}</div>
+          <div><div class="nm">${esc(c.name)}</div><div class="dt">${esc(c.detail)}</div></div></div>`;
+      }).join('')}
+      <div class="meta">pool ${esc(a.address)} · cluster ${esc(a.cluster)}</div>`;
+  }catch(e){
+    $('dbcOut').innerHTML = '<div class="err">✕ '+esc(e.message)+'</div>';
+  }finally{
+    $('dbcbtn').disabled = false;
+  }
+}
+
+$('scan').onclick = scan;
+$('dbcbtn').onclick = assessDbc;
+$('mint').addEventListener('keydown', e => { if (e.key === 'Enter') scan(); });
+$('dbcp').addEventListener('keydown', e => { if (e.key === 'Enter') assessDbc(); });
+
+fetch('/api/meta').then(r=>r.json()).then(m=>{
+  $('meta').textContent = `rpc ${m.rpc} · dexes ${m.dexes.join(', ')}`;
+}).catch(()=>{});
+</script>
+</body>
+</html>

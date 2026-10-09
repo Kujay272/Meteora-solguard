@@ -1,0 +1,35 @@
+{
+  "name": "v5-alpha",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "typecheck": "tsc --noEmit",
+    "solguard": "ts-node solguard/cli.ts",
+    "solguard:test": "ts-node solguard/resolve.test.ts",
+    "solguard:ui": "ts-node solguard/ui-server.ts --open",
+    "v5:ui": "ts-node solguard/dashboard.ts --open"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.31.0",
+    "@meteora-ag/dynamic-bonding-curve-sdk": "^1.5.11",
+    "@solana/spl-token": "^0.4.13",
+    "@solana/web3.js": "^1.98.4",
+    "bn.js": "^5.2.1",
+    "decimal.js": "^10.6.0",
+    "dotenv": "^17.4.2",
+    "node-telegram-bot-api": "^0.67.0",
+    "winston": "^3.19.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "@types/node-telegram-bot-api": "^0.64.14",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.0"
+  }
+}

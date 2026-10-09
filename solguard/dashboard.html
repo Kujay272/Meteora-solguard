@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>V5 ALPHA · SOLANA</title>
+<style>
+  :root{
+    --bg:#05050a; --panel:#0b0b11; --panel2:#0f0f17; --panel3:#13131d;
+    --line:#1b1b25; --line2:#272736;
+    --gold:#e8b64c; --gold2:#ffd77a; --golddim:#7a6224;
+    --green:#3ddc84; --red:#ff4d5e; --amber:#ffb020; --grey:#6a6a7c;
+    --text:#e8e8f0; --dim:#8a8a99;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--bg); color:var(--text); font-family:var(--sans);
+    font-size:13px; -webkit-font-smoothing:antialiased; overflow-x:hidden;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:
+      radial-gradient(900px 500px at 12% -10%, rgba(232,182,76,.07), transparent 60%),
+      radial-gradient(700px 400px at 100% 0%, rgba(232,182,76,.05), transparent 65%);
+  }
+
+  /* ── header ───────────────────────────────────────────────── */
+  header{
+    position:fixed; top:0; left:0; right:0; height:54px; z-index:60;
+    display:flex; align-items:center; gap:14px; padding:0 16px;
+    background:rgba(8,8,13,.88); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .brand{display:flex; align-items:center; gap:10px}
+  .mark{
+    width:30px;height:30px;border-radius:7px;display:grid;place-items:center;
+    background:linear-gradient(145deg,var(--gold),#a8842c);
+    color:#0a0a0f;font-weight:800;font-size:12px;letter-spacing:-.5px;
+    box-shadow:0 0 18px rgba(232,182,76,.22);
+  }
+  .title{font-weight:650; letter-spacing:.14em; font-size:12px}
+  .title span{color:var(--gold); font-weight:500}
+  .pill{
+    display:inline-flex;align-items:center;gap:7px;height:24px;padding:0 10px;
+    border:1px solid var(--line2); border-radius:999px;
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.09em; color:var(--dim);
+  }
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2.4s infinite}
+  .dot.bad{background:var(--red);box-shadow:0 0 8px var(--red)}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .spacer{flex:1}
+  .guard-btn{
+    display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 14px;cursor:pointer;
+    background:linear-gradient(180deg,#191922,#101018);
+    border:1px solid var(--golddim); border-radius:7px;
+    color:var(--gold2); font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:.1em;
+    transition:border-color .18s, box-shadow .18s, transform .1s;
+  }
+  .guard-btn:hover{border-color:var(--gold); box-shadow:0 0 20px rgba(232,182,76,.2)}
+  .guard-btn:active{transform:translateY(1px)}
+  .guard-btn.on{background:linear-gradient(180deg,#e8b64c,#b8892f); color:#0a0a0f; border-color:var(--gold2)}
+
+  /* ── layout ───────────────────────────────────────────────── */
+  main{position:relative;z-index:1;padding:70px 16px 40px;max-width:1560px;margin:0 auto}
+  .grid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;align-items:start}
+  @media(max-width:1150px){.grid{grid-template-columns:minmax(0,1fr)}}
+
+  .tiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:16px}
+  @media(max-width:900px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  .tile{
+    background:linear-gradient(180deg,var(--panel2),var(--panel));
+    border:1px solid var(--line); border-radius:10px; padding:11px 13px;
+  }
+  .tile .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;color:var(--grey);text-transform:uppercase}
+  .tile .v{font-family:var(--mono);font-size:19px;font-weight:600;margin-top:5px;letter-spacing:-.4px}
+  .tile .v.gold{color:var(--gold2)} .tile .v.green{color:var(--green)}
+  .tile .v.red{color:var(--red)} .tile .v.amber{color:var(--amber)}
+  .tile .s{font-size:10px;color:var(--dim);margin-top:2px;font-family:var(--mono)}
+
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:11px;overflow:hidden}
+  .panel-h{
+    display:flex;align-items:center;gap:8px;padding:10px 13px;
+    border-bottom:1px solid var(--line); background:rgba(255,255,255,.012);
+  }
+  .panel-h h2{font-size:10.5px;font-weight:650;letter-spacing:.15em;color:var(--dim);text-transform:uppercase}
+  .panel-h .n{font-family:var(--mono);font-size:10px;color:var(--gold);margin-left:auto}
+  .scroll{max-height:calc(100vh - 210px);overflow-y:auto;padding:12px}
+  .scroll::-webkit-scrollbar{width:8px}
+  .scroll::-webkit-scrollbar-thumb{background:#20202c;border-radius:8px}
+
+  /* ── trade cards ──────────────────────────────────────────── */
+  .feed{display:flex;flex-direction:column;gap:9px}
+  .card{
+    position:relative; border:1px solid var(--line); border-left:2px solid var(--line2);
+    border-radius:9px; padding:11px 13px; background:linear-gradient(180deg,var(--panel2),#0a0a10);
+  }
+  .card.fresh{animation:dashIn .42s cubic-bezier(.16,.84,.24,1) both;border-left-color:var(--gold)}
+  @keyframes dashIn{
+    0%{opacity:0;transform:translateY(-16px) scale(.985)}
+    100%{opacity:1;transform:translateY(0) scale(1)}
+  }
+  .card.win{border-left-color:var(--green)}
+  .card.loss{border-left-color:var(--red)}
+  .card.sus{border-left-color:var(--amber)}
+  .row1{display:flex;align-items:center;gap:10px}
+  .pair{font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.02em}
+  .pnl{margin-left:auto;font-family:var(--mono);font-size:13px;font-weight:600}
+  .pnl.up{color:var(--green)} .pnl.dn{color:var(--red)}
+  .row2{display:flex;align-items:center;gap:7px;margin-top:8px;flex-wrap:wrap}
+  .tag{
+    font-family:var(--mono);font-size:10px;padding:2.5px 7px;border-radius:5px;
+    border:1px solid var(--line2);color:var(--dim);letter-spacing:.05em;
+  }
+  .tag.buy{color:#7fd1ff;border-color:#1d3a4d}
+  .tag.sell{color:#ffb08a;border-color:#4d3320}
+  .arw{color:var(--grey);font-family:var(--mono);font-size:11px}
+  .row3{display:flex;gap:14px;margin-top:8px;font-family:var(--mono);font-size:10.5px;color:var(--grey);flex-wrap:wrap}
+  .row3 b{color:var(--dim);font-weight:500}
+  .flag{
+    position:absolute;top:-1px;right:-1px;font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;
+    background:rgba(255,176,32,.13);color:var(--amber);border:1px solid #4d3a12;
+    border-radius:0 9px 0 7px;padding:2px 7px;
+  }
+  .scan-mini{
+    margin-left:auto;font-family:var(--mono);font-size:9.5px;cursor:pointer;
+    background:transparent;border:1px solid var(--golddim);color:var(--gold);
+    border-radius:5px;padding:2px 7px;
+  }
+  .scan-mini:hover{border-color:var(--gold);background:rgba(232,182,76,.08)}
+
+  /* ── side lists ───────────────────────────────────────────── */
+  .side{display:flex;flex-direction:column;gap:16px}
+  .opp{
+    display:flex;align-items:center;gap:8px;padding:6px 4px;border-bottom:1px solid #12121a;
+    font-family:var(--mono);font-size:10.5px;
+  }
+  .opp:last-child{border-bottom:0}
+  .opp .t{color:var(--dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .opp .b{color:var(--gold)}
+  .logbox{
+    padding:10px 12px;max-height:300px;overflow-y:auto;background:#07070c;
+    font-family:var(--mono);font-size:10px;line-height:1.55;color:#7d7d8c;white-space:pre-wrap;word-break:break-word;
+  }
+  .logbox::-webkit-scrollbar{width:8px}
+  .logbox::-webkit-scrollbar-thumb{background:#20202c;border-radius:8px}
+  .logbox .l{animation:fadeIn .3s both}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .empty{color:var(--grey);font-family:var(--mono);font-size:11px;padding:14px 4px;text-align:center}
+
+  /* ── solguard slide-in ────────────────────────────────────── */
+  .scrim{
+    position:fixed;inset:0;z-index:70;background:rgba(2,2,6,.62);backdrop-filter:blur(3px);
+    opacity:0;pointer-events:none;transition:opacity .3s;
+  }
+  .scrim.open{opacity:1;pointer-events:auto}
+  .guard{
+    position:fixed;top:0;right:0;bottom:0;width:min(460px,94vw);z-index:80;
+    background:linear-gradient(180deg,#0a0a10,#07070c);
+    border-left:1px solid var(--golddim);
+    box-shadow:-30px 0 70px rgba(0,0,0,.75);
+    transform:translateX(102%);
+    transition:transform .34s cubic-bezier(.2,.85,.22,1);
+    display:flex;flex-direction:column;
+  }
+  .guard.open{transform:translateX(0)}
+  .g-head{
+    display:flex;align-items:center;gap:10px;padding:15px 16px;border-bottom:1px solid var(--line);
+  }
+  .g-head h3{font-size:11px;letter-spacing:.16em;color:var(--gold);font-weight:650}
+  .g-head .x{margin-left:auto;cursor:pointer;color:var(--grey);font-size:17px;line-height:1}
+  .g-head .x:hover{color:var(--text)}
+  .g-body{padding:16px;overflow-y:auto;flex:1}
+  .g-body::-webkit-scrollbar{width:8px}
+  .g-body::-webkit-scrollbar-thumb{background:#20202c;border-radius:8px}
+  .lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;color:var(--grey);text-transform:uppercase;margin-bottom:6px;display:block}
+  input,select{
+    width:100%;background:#0e0e16;border:1px solid var(--line2);border-radius:7px;
+    color:var(--text);font-family:var(--mono);font-size:11.5px;padding:9px 11px;outline:none;
+  }
+  input:focus,select:focus{border-color:var(--golddim);box-shadow:0 0 0 3px rgba(232,182,76,.07)}
+  .fld{margin-bottom:12px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .go{
+    width:100%;height:38px;cursor:pointer;border:0;border-radius:8px;margin-top:2px;
+    background:linear-gradient(180deg,var(--gold),#b8892f);color:#0a0a0f;
+    font-family:var(--mono);font-size:11.5px;font-weight:700;letter-spacing:.12em;
+    transition:filter .15s;
+  }
+  .go:hover{filter:brightness(1.09)}
+  .go:disabled{filter:grayscale(.7) brightness(.7);cursor:wait}
+  .note{font-size:10.5px;color:var(--grey);line-height:1.6;margin-top:10px;font-family:var(--mono)}
+
+  .verdict{margin-top:16px;border:1px solid var(--line);border-radius:10px;overflow:hidden;display:none}
+  .verdict.show{display:block;animation:dashIn .34s both}
+  .v-head{padding:13px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line)}
+  .v-score{font-family:var(--mono);font-size:30px;font-weight:700;letter-spacing:-1.4px;line-height:1}
+  .v-meta{flex:1;min-width:0}
+  .v-badge{
+    display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.15em;
+    padding:3px 9px;border-radius:5px;margin-bottom:5px;
+  }
+  .v-sub{font-size:11px;color:var(--dim);line-height:1.5}
+  .ok .v-score{color:var(--green)} .ok .v-badge{background:rgba(61,220,132,.13);color:var(--green);border:1px solid #1d4d33}
+  .warn .v-score{color:var(--amber)} .warn .v-badge{background:rgba(255,176,32,.13);color:var(--amber);border:1px solid #4d3a12}
+  .bad .v-score{color:var(--red)} .bad .v-badge{background:rgba(255,77,94,.13);color:var(--red);border:1px solid #4d1d24}
+  .unk .v-score{color:var(--grey)} .unk .v-badge{background:rgba(106,106,124,.15);color:#a0a0b0;border:1px solid #2a2a38}
+  .chk{display:flex;gap:10px;padding:9px 13px;border-bottom:1px solid #111119;align-items:flex-start}
+  .chk:last-child{border-bottom:0}
+  .chk .st{
+    font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:.1em;
+    padding:2px 6px;border-radius:4px;flex-shrink:0;margin-top:1px;min-width:56px;text-align:center;
+  }
+  .st.pass{background:rgba(61,220,132,.12);color:var(--green)}
+  .st.fail{background:rgba(255,77,94,.14);color:var(--red)}
+  .st.skip{background:rgba(106,106,124,.14);color:#9a9aaa}
+  .st.unver{background:rgba(255,176,32,.14);color:var(--amber)}
+  .chk .nm{font-size:12px;font-weight:500}
+  .chk .dt{font-size:10.5px;color:var(--dim);line-height:1.55;margin-top:2px}
+  .v-foot{padding:9px 13px;font-family:var(--mono);font-size:9.5px;color:var(--grey);border-top:1px solid var(--line)}
+  .spin{
+    width:14px;height:14px;border:2px solid var(--golddim);border-top-color:var(--gold);
+    border-radius:50%;animation:sp .7s linear infinite;display:inline-block;vertical-align:-2px;margin-right:8px;
+  }
+  @keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="mark">V5</div>
+    <div class="title">V5 ALPHA <span>· SOLANA</span></div>
+  </div>
+  <div class="pill"><span class="dot" id="dot"></span><span id="conn">CONNECTING</span></div>
+  <div class="pill" id="rpcmode">RPC —</div>
+  <div class="spacer"></div>
+  <button class="guard-btn" id="guardBtn">◈ SOLGUARD</button>
+</header>
+
+<main>
+  <div class="tiles">
+    <div class="tile">
+      <div class="k">Trades</div>
+      <div class="v" id="tTrades">0</div>
+      <div class="s" id="tSince">—</div>
+    </div>
+    <div class="tile">
+      <div class="k">Win rate</div>
+      <div class="v green" id="tWin">—</div>
+      <div class="s" id="tWL">0W / 0L</div>
+    </div>
+    <div class="tile">
+      <div class="k">Net P&amp;L</div>
+      <div class="v gold" id="tPnl">0.0000</div>
+      <div class="s">SOL · paper</div>
+    </div>
+    <div class="tile">
+      <div class="k">Balance</div>
+      <div class="v" id="tBal">—</div>
+      <div class="s" id="tBalSrc">paper_state.json</div>
+    </div>
+    <div class="tile">
+      <div class="k">Data quality</div>
+      <div class="v amber" id="tSus">0</div>
+      <div class="s">suspect rows</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <section class="panel">
+      <div class="panel-h">
+        <h2>Live trade feed</h2>
+        <span class="n" id="feedN">0 rows</span>
+      </div>
+      <div class="scroll">
+        <div class="feed" id="feed"><div class="empty">Waiting for the engine to write a trade…</div></div>
+      </div>
+    </section>
+
+    <div class="side">
+      <section class="panel">
+        <div class="panel-h"><h2>Opportunity ticker</h2><span class="n" id="oppN">0</span></div>
+        <div id="opps" style="padding:6px 10px;max-height:260px;overflow-y:auto">
+          <div class="empty">No opportunities seen yet.</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-h"><h2>Engine log</h2><span class="n">tail</span></div>
+        <div class="logbox" id="log"><div class="empty">log file empty</div></div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<div class="scrim" id="scrim"></div>
+
+<aside class="guard" id="guard">
+  <div class="g-head">
+    <span style="color:var(--gold)">◈</span>
+    <h3>SOLGUARD</h3>
+    <span class="x" id="guardClose">✕</span>
+  </div>
+  <div class="g-body">
+    <div class="fld">
+      <label class="lbl" for="mint">Token mint address</label>
+      <input id="mint" placeholder="base58 mint…" spellcheck="false" autocomplete="off">
+    </div>
+    <div class="fld two">
+      <div>
+        <label class="lbl" for="dex">DEX (optional)</label>
+        <select id="dex"><option value="">(auto / none)</option></select>
+      </div>
+      <div>
+        <label class="lbl" for="pool">Pool (optional)</label>
+        <input id="pool" placeholder="pool addr…" spellcheck="false" autocomplete="off">
+      </div>
+    </div>
+    <button class="go" id="scanBtn">RUN PRE-TRADE GATE</button>
+    <div class="note">
+      Runs the same deterministic checks the engine's Tier-0 gate runs.
+      Read-only — no wallet, no signing, no transaction.
+      An unreadable check reports <b style="color:var(--amber)">UNVERIFIED</b> and is never
+      scored as a finding about the token.
+    </div>
+
+    <div class="verdict" id="verdict"></div>
+  </div>
+</aside>
+
+<script>const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const isNum = v => v !== null && v !== undefined && v !== '' && isFinite(Number(v));
+const fixed = (v, d) => isNum(v) ? Number(v).toFixed(d) : '—';
+const signed = (v, d) => isNum(v) ? (Number(v) >= 0 ? '+' : '') + Number(v).toFixed(d) : '—';
+
+function big(v, d) {
+  if (!isNum(v)) return '—';
+  const n = Number(v);
+  if (Math.abs(n) >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+  if (Math.abs(n) >= 1e3) return (n / 1e3).toFixed(2) + 'K';
+  if (Math.abs(n) >= 1) return n.toFixed(2);
+  return n.toFixed(d ?? 4);
+}
+function ago(ts) {
+  const t = Date.parse(ts);
+  if (!isFinite(t)) return '';
+  const s = Math.max(0, Math.floor((Date.now() - t) / 1000));
+  if (s < 60) return s + 's ago';
+  if (s < 3600) return Math.floor(s / 60) + 'm ago';
+  if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+  return Math.floor(s / 86400) + 'd ago';
+}
+
+let MINT_MAP = {};
+const MAX_CARDS = 120;
+
+// ── tiles ──────────────────────────────────────────────────────
+function renderStats(s) {
+  if (!s) return;
+  $('#tTrades').textContent = s.trades ?? 0;
+  $('#tWL').textContent = (s.wins ?? 0) + 'W / ' + (s.losses ?? 0) + 'L';
+  const decided = (s.wins ?? 0) + (s.losses ?? 0);
+  $('#tWin').textContent = decided > 0 ? (((s.wins ?? 0) / decided) * 100).toFixed(1) + '%' : '—';
+  const pnl = Number(s.cleanProfitSol ?? 0);
+  const pnlEl = $('#tPnl');
+  pnlEl.textContent = big(pnl, 4);
+  pnlEl.className = 'v ' + (pnl > 0 ? 'green' : pnl < 0 ? 'red' : 'gold');
+  const sub = pnlEl.nextElementSibling;
+  if (sub) sub.textContent = 'SOL · ' + (s.cleanTrades ?? 0) + ' clean / ' + (s.suspectRows ?? 0) + ' excluded';
+  $('#tSus').textContent = s.suspectRows ?? 0;
+  $('#tSus').className = 'v ' + ((s.suspectRows ?? 0) > 0 ? 'amber' : 'green');
+  $('#tSince').textContent = s.lastSeen ? ago(s.lastSeen) : '—';
+}
+
+function renderState(st) {
+  const el = $('#tBal');
+  if (!st || typeof st !== 'object') { el.textContent = '—'; return; }
+  let key = Object.keys(st).find(k => /balance/i.test(k) && isNum(st[k]));
+  if (!key) key = Object.keys(st).find(k => /sol/i.test(k) && isNum(st[k]));
+  el.textContent = key ? Number(st[key]).toFixed(4) : '—';
+  $('#tBalSrc').textContent = key ? key : 'no balance field';
+}
+
+// ── trade card ─────────────────────────────────────────────────
+function card(r, fresh) {
+  if (!r || typeof r !== 'object') return '';
+  const p = Number(r.profitSol ?? 0);
+  let cls = 'card';
+  if (r.suspect) cls += ' sus';
+  else if (p > 0) cls += ' win';
+  else if (p < 0) cls += ' loss';
+  if (fresh) cls += ' fresh';
+
+  const mint = MINT_MAP[r.pairLabel];
+  const scanBtn = mint
+    ? `<button class="scan-mini" data-mint="${esc(mint)}">SCAN</button>`
+    : '';
+
+  return `<article class="${cls}">
+    ${r.suspect ? `<span class="flag" title="profit outside any plausible arb range — check the sim's price units">SUSPECT UNITS</span>` : ''}
+    <div class="row1">
+      <span class="pair">${esc(r.pairLabel ?? '?')}</span>
+      <span class="pnl ${p >= 0 ? 'up' : 'dn'}">${signed(r.profitSol, 4)} SOL</span>
+    </div>
+    <div class="row2">
+      <span class="tag buy">BUY ${esc(r.buyDex ?? '?')}</span>
+      <span class="arw">→</span>
+      <span class="tag sell">SELL ${esc(r.sellDex ?? '?')}</span>
+      ${scanBtn}
+    </div>
+    <div class="row3">
+      <span><b>spread</b> ${big(r.spreadBps, 1)} bps</span>
+      <span><b>profit</b> ${big(r.profitBps, 1)} bps</span>
+      <span><b>size</b> ${fixed(r.tradeSizeSol, 3)} SOL</span>
+      <span style="margin-left:auto">${esc(ago(r.timestamp))}</span>
+    </div>
+  </article>`;
+}
+
+function resetFeed() {
+  $('#feed').innerHTML = '';
+}
+
+function addTrade(r, fresh) {
+  const feed = $('#feed');
+  const em = feed.querySelector('.empty');
+  if (em) em.remove();
+  feed.insertAdjacentHTML('afterbegin', card(r, fresh));
+  const cards = feed.querySelectorAll('.card');
+  for (let i = MAX_CARDS; i < cards.length; i++) cards[i].remove();
+  $('#feedN').textContent = feed.querySelectorAll('.card').length + ' rows';
+}
+
+// ── opportunities ──────────────────────────────────────────────
+function addOpp(o) {
+  if (!o || typeof o !== 'object') return;
+  const box = $('#opps');
+  const em = box.querySelector('.empty');
+  if (em) em.remove();
+  const net = o.estimatedProfitBps ?? o.profitBps;
+  const el = document.createElement('div');
+  el.className = 'opp';
+  el.innerHTML = `<span class="b">${esc(o.pairLabel ?? '?')}</span>
+    <span class="t">${esc(o.buyDex ?? '?')} → ${esc(o.sellDex ?? '?')}</span>
+    <span class="b">${signed(net, 1)} bps</span>`;
+  box.insertBefore(el, box.firstChild);
+  while (box.children.length > 40) box.removeChild(box.lastChild);
+  $('#oppN').textContent = box.children.length;
+}
+
+// ── engine log ─────────────────────────────────────────────────
+function addLog(line) {
+  const box = $('#log');
+  const em = box.querySelector('.empty');
+  if (em) em.remove();
+  const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
+  const d = document.createElement('div');
+  d.className = 'l';
+  d.textContent = line;
+  box.appendChild(d);
+  while (box.children.length > 300) box.removeChild(box.firstChild);
+  if (atBottom) box.scrollTop = box.scrollHeight;
+}
+
+// ── boot ───────────────────────────────────────────────────────
+function applySnapshot(s) {
+  MINT_MAP = s.mints || {};
+  renderStats(s.stats);
+  renderState(s.state);
+  if (s.rpc) $('#rpcmode').textContent = s.usingPublicRpc ? 'RPC · PUBLIC (rate limited)' : 'RPC · DEDICATED';
+  const dex = $('#dex');
+  (s.dexes || []).forEach(d => {
+    const o = document.createElement('option');
+    o.value = d; o.textContent = d;
+    dex.appendChild(o);
+  });
+  resetFeed();
+  (s.trades || []).forEach(t => addTrade(t, false));
+  if (!(s.trades || []).length) $('#feed').innerHTML = '<div class="empty">Waiting for the engine to write a trade…</div>';
+  if ($('#opps').querySelector('.opp')) { /* keep */ } else { $('#opps').innerHTML = ''; }
+  (s.opportunities || []).forEach(addOpp);
+  if (!$('#opps').children.length) $('#opps').innerHTML = '<div class="empty">No opportunities seen yet.</div>';
+  $('#log').innerHTML = '';
+  (s.log || []).forEach(l => {
+    const d = document.createElement('div');
+    d.textContent = l;
+    $('#log').appendChild(d);
+  });
+  if (!$('#log').children.length) $('#log').innerHTML = '<div class="empty">log file empty</div>';
+  $('#log').scrollTop = $('#log').scrollHeight;
+}
+
+function connect() {
+  const es = new EventSource('/api/stream');
+  es.addEventListener('open', () => {
+    $('#conn').textContent = 'LIVE';
+    $('#dot').classList.remove('bad');
+  });
+  es.addEventListener('error', () => {
+    $('#conn').textContent = 'RECONNECTING';
+    $('#dot').classList.add('bad');
+  });
+  es.addEventListener('snapshot', e => applySnapshot(JSON.parse(e.data)));
+  es.addEventListener('trade', e => addTrade(JSON.parse(e.data), true));
+  es.addEventListener('stats', e => renderStats(JSON.parse(e.data)));
+  es.addEventListener('opportunity', e => addOpp(JSON.parse(e.data)));
+  es.addEventListener('log', e => addLog(e.data));
+}
+
+// ── solguard panel ─────────────────────────────────────────────
+function openGuard(mint) {
+  if (mint) $('#mint').value = mint;
+  $('#guard').classList.add('open');
+  $('#scrim').classList.add('open');
+  $('#guardBtn').classList.add('on');
+  $('#mint').focus();
+}
+function closeGuard() {
+  $('#guard').classList.remove('open');
+  $('#scrim').classList.remove('open');
+  $('#guardBtn').classList.remove('on');
+}
+$('#guardBtn').onclick = () => $('#guard').classList.contains('open') ? closeGuard() : openGuard();
+$('#guardClose').onclick = closeGuard;
+$('#scrim').onclick = closeGuard;
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeGuard(); });
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('.scan-mini');
+  if (b) openGuard(b.dataset.mint);
+});
+
+const STATUS_LABEL = { pass: 'PASS', fail: 'FAIL', skip: 'SKIP', unverified: 'UNVERIFIED' };
+const STATUS_CLASS = { pass: 'pass', fail: 'fail', skip: 'skip', unverified: 'unver' };
+
+function renderVerdict(d) {
+  const box = $('#verdict');
+  const v = d.verdict || {};
+  const decision = v.decision || (v.safe ? 'ALLOW' : 'REVIEW');
+  const cls = decision === 'BLOCK' ? 'bad' : decision === 'UNVERIFIED' ? 'unk'
+    : (decision === 'ALLOW_WITH_WARNINGS' || (v.warned || []).length) ? 'warn' : 'ok';
+  const score = v.riskScore === null || v.riskScore === undefined ? '—' : v.riskScore;
+  const conf = isNum(v.confidence) ? (Number(v.confidence) * 100).toFixed(0) + '%' : '—';
+
+  const checks = (v.checks || []).map(c => {
+    const st = STATUS_CLASS[c.status] || 'skip';
+    return `<div class="chk">
+      <span class="st ${st}">${STATUS_LABEL[c.status] || '—'}</span>
+      <div><div class="nm">${esc(c.name || c.id)}</div><div class="dt">${esc(c.detail || '')}</div></div>
+    </div>`;
+  }).join('');
+
+  box.className = 'verdict show ' + cls;
+  box.innerHTML = `<div class="v-head">
+      <div class="v-score">${score}</div>
+      <div class="v-meta">
+        <div class="v-badge">${esc(decision)}</div>
+        <div class="v-sub">${esc(d.summary || '')}</div>
+      </div>
+    </div>
+    <div>${checks}</div>
+    <div class="v-foot">confidence ${conf} · ${d.tookMs ?? '?'}ms · ${esc(d.rpc || '')} · read-only</div>`;
+}
+
+$('#scanBtn').onclick = async () => {
+  const mint = $('#mint').value.trim();
+  const box = $('#verdict');
+  if (!mint) { box.className = 'verdict show unk'; box.innerHTML = '<div class="v-head"><div class="v-sub">Paste a mint address first.</div></div>'; return; }
+
+  const btn = $('#scanBtn');
+  btn.disabled = true;
+  box.className = 'verdict show unk';
+  box.innerHTML = `<div class="v-head"><div class="v-sub"><span class="spin"></span>Running deterministic checks… this hits live RPC, give it a few seconds.</div></div>`;
+
+  try {
+    const q = new URLSearchParams({ mint });
+    const dex = $('#dex').value;
+    const pool = $('#pool').value.trim();
+    if (dex) q.set('dex', dex);
+    if (pool) q.set('pool', pool);
+    const res = await fetch('/api/scan?' + q.toString());
+    const data = await res.json();
+    if (!data.ok) {
+      box.className = 'verdict show bad';
+      box.innerHTML = `<div class="v-head"><div class="v-meta"><div class="v-badge">ERROR</div>
+        <div class="v-sub">${esc(data.error || 'scan failed')}</div></div></div>`;
+    } else {
+      renderVerdict(data);
+    }
+  } catch (err) {
+    box.className = 'verdict show bad';
+    box.innerHTML = `<div class="v-head"><div class="v-meta"><div class="v-badge">NETWORK</div>
+      <div class="v-sub">${esc(err.message)}</div></div></div>`;
+  } finally {
+    btn.disabled = false;
+  }
+};
+
+$('#mint').addEventListener('keydown', e => { if (e.key === 'Enter') $('#scanBtn').click(); });
+
+connect();
+setInterval(() => {
+  document.querySelectorAll('.card .row3 span:last-child').forEach(el => { /* refresh ages on next snapshot */ });
+}, 15000);</script>
+</body>
+</html>
