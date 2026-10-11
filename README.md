@@ -2,6 +2,8 @@
 
 **Read-only · no wallet · no vendor key · no signing key ever loaded**
 
+![Dashboard](docs/screenshots/solguard-dashboard.png)
+
 SolGuard audits a token **before** a trade decision, not after. It runs five
 deterministic checks against Solana mainnet, and it treats *"I could not verify
 this"* as a verdict of its own rather than quietly rounding it up to "safe".
