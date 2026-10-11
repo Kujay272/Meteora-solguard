@@ -335,4 +335,4 @@ costs 2–4 s. Pre-warming and SWR make this rare, not impossible.
 
 ---
 
-**Author:** Leon · **License:** ISC · Built for the Meteora DBC track.
+**Author:** Leon Kasirai Kujinga· **License:** ISC · Built for the Meteora DBC track.
