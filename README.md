@@ -15,7 +15,7 @@ directly through Meteora's own TypeScript SDK. Not through an aggregator.
 > **What this submission is.** The gate, and the reasoning discipline behind it.
 > The arb engine that hosts it is a research harness running on paper. Its audit
 > output is real mainnet state; its P&L ledger is not a track record — see
-> [Honest limitations](#honest-limitations)..
+> [Honest limitations](#honest-limitations).
 
 ---
 
